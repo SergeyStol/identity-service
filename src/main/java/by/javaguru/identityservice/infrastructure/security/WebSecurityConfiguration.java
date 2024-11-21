@@ -1,4 +1,4 @@
-package by.javaguru.identityservice;
+package by.javaguru.identityservice.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

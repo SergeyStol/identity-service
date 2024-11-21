@@ -1,14 +1,12 @@
 package by.javaguru.identityservice.features.jwt;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.AeadAlgorithm;
+import io.jsonwebtoken.security.KeyAlgorithm;
+import io.jsonwebtoken.security.Password;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 
 /**
  * @author Sergey Stol
@@ -18,25 +16,19 @@ import java.time.Instant;
 @AllArgsConstructor
 @Slf4j
 public class JwtTokenService {
-   private final JwtEncoder jwtEncoder;
-   private final JwtDecoder jwtDecoder;
+   private final Password password;
 
    public String getToken(String subject, Long userId, String userEmail) {
-      Instant now = Instant.now();
-      JwtClaimsSet claims = JwtClaimsSet.builder()
-        .issuer("task-tracker-app")
-        .issuedAt(now)
-        .expiresAt(now.plusSeconds(36000L))
+      KeyAlgorithm<Password, Password> alg = Jwts.KEY.PBES2_HS512_A256KW;
+      AeadAlgorithm enc = Jwts.ENC.A256GCM;
+      String jwtToken = Jwts.builder()
+        .issuer("profiler-application")
         .subject(subject)
         .claim("userId", userId)
         .claim("userEmail", userEmail)
-        .build();
-      String tokenValue = jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
+        .encryptWith(password, alg, enc)
+        .compact();
       log.info("Generated new jwt token for user={}", userEmail);
-      return tokenValue;
-   }
-
-   public JwtDecodedToken getDecodedToken(String encodedToken) {
-      return new JwtDecodedToken(jwtDecoder.decode(encodedToken));
+      return jwtToken;
    }
 }
